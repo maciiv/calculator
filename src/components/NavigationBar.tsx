@@ -2,6 +2,7 @@ import { FunctionComponent } from "react";
 import { Navbar, Container, Nav } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css"
 import Logo from "../assets/react.svg"
+import { Link } from "react-router-dom";
 
 const NavigationBar: FunctionComponent = function () {
 
@@ -9,7 +10,7 @@ const NavigationBar: FunctionComponent = function () {
         <>
             <Navbar bg="dark" variant="dark">
                 <Container>
-                    <Navbar.Brand href="/">
+                    <Link to="/" className="navbar-brand">
                         <img
                         alt=""
                         src={Logo}
@@ -17,13 +18,13 @@ const NavigationBar: FunctionComponent = function () {
                         height="30"
                         className="d-inline-block align-top"
                         />{' '}
-                    </Navbar.Brand>
+                    </Link>
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav>
-                            <Nav.Link href="/calculator/square">Square</Nav.Link>
-                            <Nav.Link href="/calculator/triangle">Triangle</Nav.Link>
-                            <Nav.Link href="/calculator/trapezoid">Trapezoid</Nav.Link>
+                            <Link to="/square" className="nav-link">Square</Link>
+                            <Link to="/triangle" className="nav-link">Triangle</Link>
+                            <Link to="/trapezoid" className="nav-link">Trapezoid</Link>
                         </Nav>
                     </Navbar.Collapse>
                 </Container>
