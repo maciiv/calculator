@@ -16,7 +16,9 @@ const router = createBrowserRouter(
       <Route path="triangle" element={<TriangleCalculator />} />
       <Route path="trapezoid" element={<TrapezoidCalculator />} />
     </Route>
-  )
+  ), {
+    basename: "/calculator"
+  }
 )
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
