@@ -21,9 +21,9 @@ const NavigationBar: FunctionComponent = function () {
                     <Navbar.Toggle aria-controls="basic-navbar-nav" />
                     <Navbar.Collapse id="basic-navbar-nav">
                         <Nav>
-                            <Nav.Link href="/square">Square</Nav.Link>
-                            <Nav.Link href="/triangle">Triangle</Nav.Link>
-                            <Nav.Link href="/trapezoid">Trapezoid</Nav.Link>
+                            <Nav.Link href="/calculator/square">Square</Nav.Link>
+                            <Nav.Link href="/calculator/triangle">Triangle</Nav.Link>
+                            <Nav.Link href="/calculator/trapezoid">Trapezoid</Nav.Link>
                         </Nav>
                     </Navbar.Collapse>
                 </Container>
