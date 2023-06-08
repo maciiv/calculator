@@ -1,89 +1,125 @@
-import { Alert, Card, Col, Row } from "react-bootstrap"
+import { Alert, Card, Col, Form, Row } from 'react-bootstrap'
 import { FunctionComponent, useState } from 'react'
-import Explanation from "../components/Explanation"
-import InputGroupInput, { IInput, Input } from "../components/InputGroupInput"
-import InputGroupResult from "../components/InputGroupResult"
-import { convertToMm, convertFromMmSquared } from "../helpers/utils"
-import History, { IHistoryData, HistoryData } from "../components/History"
-import CalculatorButtons from "../components/CalculatorButtons"
+import Explanation from '../components/Explanation'
+import InputGroupInput from '../components/InputGroupInput'
+import InputGroupResult from '../components/InputGroupResult'
+import {
+	convertToMm,
+	convertFromMmSquared,
+	calculateTriangleArea,
+} from '../helpers/utils'
+import History, {
+	IHistoryData,
+	HistoryData,
+	Input,
+} from '../components/History'
+import CalculatorButtons from '../components/CalculatorButtons'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+const triangleFormValidation = z.object({
+	base: z.string().min(1, { message: 'Must provide a number' }),
+	baseUnit: z.string().min(1, { message: 'Select a unit' }),
+	height: z.string().min(1, { message: 'Must provide a number' }),
+	heightUnit: z.string().min(1, { message: 'Select a unit' }),
+	resultUnit: z.string().min(1, { message: 'Select a unit' }),
+})
+
+type TriangleForm = z.infer<typeof triangleFormValidation>
 
 const TriangleCalculator: FunctionComponent = function () {
-    const [base, setBase] = useState(new Input(0, ""))
-    const [height, setHeight] = useState(new Input(0, ""))
-    const [resulUnit, setResultUnit] = useState("")
-    const [area, setArea] = useState(0)
-    const [selectedIndex, setSelectedIndex] = useState<undefined | number>(undefined)
-    const [history, setHistory] = useState<IHistoryData>()
+	const [area, setArea] = useState(0)
+	const [history, setHistory] = useState<IHistoryData>()
+	const {
+		register,
+		handleSubmit,
+		reset,
+		formState: { errors },
+	} = useForm<TriangleForm>({ resolver: zodResolver(triangleFormValidation) })
 
-    const calculateArea = (b: number, h: number) => {
-        const area = b * h * 0.5
-        return parseInt(area.toFixed(2))
-    }
+	const calculate = (triangleForm: TriangleForm) => {
+		const base = parseInt(triangleForm.base)
+		const height = parseInt(triangleForm.height)
+		const baseMm = convertToMm(base, triangleForm.baseUnit)
+		const heightMm = convertToMm(height, triangleForm.heightUnit)
+		const areaMm = calculateTriangleArea(baseMm, heightMm)
+		const areaResultUnit = convertFromMmSquared(areaMm, triangleForm.resultUnit)
+		setArea(areaResultUnit)
+		setHistory(
+			new HistoryData(
+				[
+					new Input(base, triangleForm.baseUnit),
+					new Input(height, triangleForm.heightUnit),
+				],
+				new Input(areaResultUnit, triangleForm.resultUnit)
+			)
+		)
+	}
 
-    const calculate = () => {
-        const baseMm = convertToMm(base.value, base.unit)
-        const heightMm = convertToMm(height.value, height.unit)
-        const areaMm = calculateArea(baseMm, heightMm)
-        const areaResultUnit = convertFromMmSquared(areaMm, resulUnit)
-        setArea(areaResultUnit)
-        setHistory(new HistoryData([base, height], new Input(areaResultUnit, resulUnit)))     
-    }
+	const resetCalculator = () => {
+		reset()
+		setArea(0)
+	}
 
-    const reset = () => {
-        setArea(0)
-        setSelectedIndex(0)
-    }
-
-    const getBase = (input: IInput) => {
-        setBase(input)
-        setSelectedIndex(undefined)
-    }
-
-    const getHeight = (input: IInput) => {
-        setHeight(input)
-        setSelectedIndex(undefined)
-    }
-
-    const getResultUnit = (unit: string) => {
-        setResultUnit(unit)
-        setSelectedIndex(undefined)
-    }
-
-    return (
-        <Row className="mt-5">
-            <Col lg="6" md="6" sm="12">
-                <Card className="h-100">
-                    <Card.Header><h3>Triangle</h3></Card.Header>
-                    <Card.Body>
-                        <Explanation>
-                            <p>A triangle is one of the most basic shapes in geometry</p>
-                            <Alert variant="info">
-                                <span><strong>Formula: </strong></span><span>A = b * h * 0.5</span>
-                                <ul>
-                                    <li>b = base</li>
-                                    <li>h = height</li>
-                                </ul>
-                            </Alert>
-                        </Explanation>
-                        <div>
-                            <InputGroupInput name="Base" selectedIndex={selectedIndex} getInput={getBase} />
-                            <InputGroupInput name="Height" selectedIndex={selectedIndex} getInput={getHeight} />
-                            <InputGroupResult result={area} selectedIndex={selectedIndex} getUnit={getResultUnit} />
-                        </div>
-                        <CalculatorButtons calculate={calculate} reset={reset} />                       
-                    </Card.Body>
-                </Card>
-            </Col>
-            <Col lg="6" md="6" sm="12">
-                <Card className="h-100">
-                    <Card.Header><h3>History</h3></Card.Header>
-                    <Card.Body>
-                        <History type="triangle" historyRecord={history}  />
-                    </Card.Body>
-                </Card>
-            </Col>
-        </Row>
-    )
+	return (
+		<Row className='mt-5'>
+			<Col lg='6' md='6' sm='12'>
+				<Card className='h-100'>
+					<Card.Header>
+						<h3>Triangle</h3>
+					</Card.Header>
+					<Card.Body>
+						<Explanation>
+							<p>A triangle is one of the most basic shapes in geometry</p>
+							<Alert variant='info'>
+								<span>
+									<strong>Formula: </strong>
+								</span>
+								<span>A = b * h * 0.5</span>
+								<ul>
+									<li>b = base</li>
+									<li>h = height</li>
+								</ul>
+							</Alert>
+						</Explanation>
+						<Form onSubmit={handleSubmit(calculate)}>
+							<InputGroupInput
+								name='Base'
+								registerValue={register('base')}
+								registerUnit={register('baseUnit')}
+								errorValue={errors.base}
+								errorUnit={errors.baseUnit}
+							/>
+							<InputGroupInput
+								name='Height'
+								registerValue={register('height')}
+								registerUnit={register('heightUnit')}
+								errorValue={errors.height}
+								errorUnit={errors.heightUnit}
+							/>
+							<InputGroupResult
+								result={area}
+								registerUnit={register('resultUnit')}
+								errorUnit={errors.resultUnit}
+							/>
+							<CalculatorButtons reset={resetCalculator} />
+						</Form>
+					</Card.Body>
+				</Card>
+			</Col>
+			<Col lg='6' md='6' sm='12'>
+				<Card className='h-100'>
+					<Card.Header>
+						<h3>History</h3>
+					</Card.Header>
+					<Card.Body>
+						<History historyRecord={history} />
+					</Card.Body>
+				</Card>
+			</Col>
+		</Row>
+	)
 }
 
 export default TriangleCalculator

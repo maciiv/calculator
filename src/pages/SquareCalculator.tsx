@@ -1,48 +1,58 @@
-import { useState } from 'react'
 import { Alert, Card, Col, Form, Row } from 'react-bootstrap'
-import { FunctionComponent } from 'react'
+import { FunctionComponent, useState } from 'react'
 import Explanation from '../components/Explanation'
-import InputGroupInput, { IInput, Input } from '../components/InputGroupInput'
+import InputGroupInput from '../components/InputGroupInput'
 import InputGroupResult from '../components/InputGroupResult'
-import { convertFromMmSquared, convertToMm } from '../helpers/utils'
-import History, { HistoryData, IHistoryData } from '../components/History'
+import {
+	calculateSquareArea,
+	convertFromMmSquared,
+	convertToMm,
+} from '../helpers/utils'
+import History, {
+	HistoryData,
+	IHistoryData,
+	Input,
+} from '../components/History'
 import CalculatorButtons from '../components/CalculatorButtons'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+const squareFormValidation = z.object({
+	side: z.string().min(1, { message: 'Must provide a number' }),
+	sideUnit: z.string().min(1, { message: 'Select a unit' }),
+	resultUnit: z.string().min(1, { message: 'Select a unit' }),
+})
+
+type SquareForm = z.infer<typeof squareFormValidation>
 
 const SquareCalculator: FunctionComponent = function () {
-	const [input, setInput] = useState(new Input(0, ''))
-	const [resulUnit, setResultUnit] = useState('')
 	const [area, setArea] = useState(0)
-	const [selectedIndex, setSelectedIndex] = useState<undefined | number>(
-		undefined
-	)
 	const [history, setHistory] = useState<IHistoryData>()
+	const {
+		register,
+		handleSubmit,
+		reset,
+		formState: { errors },
+	} = useForm<SquareForm>({ resolver: zodResolver(squareFormValidation) })
 
-	const calculateArea = (a: number) => {
-		const area = a * a
-		return parseInt(area.toFixed(2))
-	}
-
-	const calculate = () => {
-		const inputMm = convertToMm(input.value, input.unit)
-		const areaMm = calculateArea(inputMm)
-		const areaResultUnit = convertFromMmSquared(areaMm, resulUnit)
+	const calculate = (squareForm: SquareForm) => {
+		const side = parseInt(squareForm.side)
+		const inputMm = convertToMm(side, squareForm.sideUnit)
+		const areaMm = calculateSquareArea(inputMm)
+		const areaResultUnit = convertFromMmSquared(areaMm, squareForm.resultUnit)
 		setArea(areaResultUnit)
-		setHistory(new HistoryData([input], new Input(areaResultUnit, resulUnit)))
+		setHistory(
+			new HistoryData(
+				[new Input(side, squareForm.sideUnit)],
+				new Input(areaResultUnit, squareForm.resultUnit)
+			)
+		)
 	}
 
-	const reset = () => {
+	const resetCalculator = () => {
+		reset()
 		setArea(0)
-		setSelectedIndex(0)
-	}
-
-	const getInput = (input: IInput) => {
-		setInput(input)
-		setSelectedIndex(undefined)
-	}
-
-	const getResultUnit = (unit: string) => {
-		setResultUnit(unit)
-		setSelectedIndex(undefined)
 	}
 
 	return (
@@ -67,18 +77,20 @@ const SquareCalculator: FunctionComponent = function () {
 								</ul>
 							</Alert>
 						</Explanation>
-						<Form>
+						<Form onSubmit={handleSubmit(calculate)}>
 							<InputGroupInput
 								name='Side'
-								selectedIndex={selectedIndex}
-								getInput={getInput}
+								registerValue={register('side')}
+								registerUnit={register('sideUnit')}
+								errorValue={errors.side}
+								errorUnit={errors.sideUnit}
 							/>
 							<InputGroupResult
 								result={area}
-								selectedIndex={selectedIndex}
-								getUnit={getResultUnit}
+								registerUnit={register('resultUnit')}
+								errorUnit={errors.resultUnit}
 							/>
-							<CalculatorButtons calculate={calculate} reset={reset} />
+							<CalculatorButtons reset={resetCalculator} />
 						</Form>
 					</Card.Body>
 				</Card>
@@ -89,7 +101,7 @@ const SquareCalculator: FunctionComponent = function () {
 						<h3>History</h3>
 					</Card.Header>
 					<Card.Body>
-						<History type='square' historyRecord={history} />
+						<History historyRecord={history} />
 					</Card.Body>
 				</Card>
 			</Col>
